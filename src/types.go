@@ -66,7 +66,7 @@ func NewContainerDPlugin(name string, version int, plid string, manifest fog05.P
 		return nil, err
 	}
 
-	st := ContainerDPluginState{CurrentInstances: map[string][]fog05.FDURecord{}}
+	st := ContainerDPluginState{CurrentInstances: map[string][]fog05.FDURecord{}, Containers: map[string]ContainerDFDU{}, Images: []string{}}
 
 	ctd := ContainerDPlugin{ContClient: nil, sigs: make(chan os.Signal, 1), done: make(chan bool, 1), manifest: &manifest, state: st}
 

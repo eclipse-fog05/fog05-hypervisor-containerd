@@ -19,11 +19,10 @@ install:
 ifeq "$(wildcard $(CTD_PLUGIN_DIR))" ""
 	sudo mkdir $(CTD_PLUGIN_DIR)
 	sudo cp -r plugin $(CTD_PLUGIN_DIR)/containerd_plugin
-	sudo cp -r ./etc/containerd_plugin.json $(CTD_PLUGIN_DIR)/
+	sudo cp -r etc/containerd_plugin.json $(CTD_PLUGIN_DIR)/containerd_plugin.json
 else
 	sudo cp -r plugin $(CTD_PLUGIN_DIR)/containerd_plugin
 endif
-	sudo cp /etc/fos/plugins/LXD/fos_lxd.service /lib/systemd/system/
 	sudo sh -c "echo $(UUID) | xargs -i  jq  '.configuration.nodeid = \"{}\"' $(CTD_PLUGIN_CONFFILE) > /tmp/ctd_plugin.tmp && mv /tmp/ctd_plugin.tmp $(CTD_PLUGIN_CONFFILE)"
 
 
