@@ -162,17 +162,21 @@ func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Info(lstr)
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Defining a container")
 
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Pulling image: ", record.Image.URI)
 	img, err := ctd.ContClient.Pull(ctd.containerdCtx, record.Image.URI, containerd.WithPullUnpack)
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.WriteFDUError(record.FDUID, record.UUID, 500, err.Error())
 		return err
 	}
 	ctd.state.Images = append(ctd.state.Images, img.Name())
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name())
 
 	cont := ContainerDFDU{record.UUID, img.Name(), record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name() + "-" + record.UUID}
 	ctd.state.Containers[record.UUID] = cont
 
-	return ctd.FOSRuntimePluginAbstract.AddFDURecord(record.UUID, &record)
+	err = ctd.FOSRuntimePluginAbstract.AddFDURecord(record.UUID, &record)
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Defined container: ", record.UUID)
+	return err
 }
 
 // UndefineFDU ....
