@@ -71,12 +71,12 @@ func NewContainerDPlugin(name string, version int, plid string, manifest fog05.P
 	ctd := ContainerDPlugin{ContClient: nil, sigs: make(chan os.Signal, 1), done: make(chan bool, 1), manifest: &manifest, state: st}
 
 	ctd.FOSRuntimePluginAbstract = *rtp
-	ctd.FOSRuntimePluginAbstract.FOSRuntimePluginInterface = ctd
+	ctd.FOSRuntimePluginAbstract.FOSRuntimePluginInterface = &ctd
 
 	return &ctd, nil
 }
 
-func (ctd ContainerDPlugin) findContainer(name string) (*containerd.Container, error) {
+func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, error) {
 	containers, err := ctd.ContClient.Containers(ctd.containerdCtx)
 
 	var container *containerd.Container = nil
@@ -100,7 +100,7 @@ func (ctd ContainerDPlugin) findContainer(name string) (*containerd.Container, e
 }
 
 // StartRuntime ...
-func (ctd ContainerDPlugin) StartRuntime() error {
+func (ctd *ContainerDPlugin) StartRuntime() error {
 
 	ctd.FOSRuntimePluginAbstract.Logger.SetReportCaller(true)
 	ctd.FOSRuntimePluginAbstract.Logger.SetLevel(log.TraceLevel)
@@ -147,7 +147,7 @@ func (ctd ContainerDPlugin) StartRuntime() error {
 }
 
 // StopRuntime ....
-func (ctd ContainerDPlugin) StopRuntime() error {
+func (ctd *ContainerDPlugin) StopRuntime() error {
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Bye from containerd Plugin")
 	ctd.ContClient.Close()
 	ctd.FOSRuntimePluginAbstract.FOSPlugin.RemovePluginState()
@@ -157,7 +157,7 @@ func (ctd ContainerDPlugin) StopRuntime() error {
 }
 
 // DefineFDU ....
-func (ctd ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
+func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 	lstr := fmt.Sprintf("This is define for %s - %s", record.FDUID, record.UUID)
 	ctd.FOSRuntimePluginAbstract.Logger.Info(lstr)
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Defining a container")
@@ -176,7 +176,7 @@ func (ctd ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 }
 
 // UndefineFDU ....
-func (ctd ContainerDPlugin) UndefineFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) UndefineFDU(instanceid string) error {
 	lstr := fmt.Sprintf("This is remove for %s", instanceid)
 	ctd.FOSRuntimePluginAbstract.Logger.Info(lstr)
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Undefining a container")
@@ -187,7 +187,7 @@ func (ctd ContainerDPlugin) UndefineFDU(instanceid string) error {
 }
 
 // ConfigureFDU ....
-func (ctd ContainerDPlugin) ConfigureFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Configure a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -256,7 +256,7 @@ func (ctd ContainerDPlugin) ConfigureFDU(instanceid string) error {
 }
 
 // CleanFDU ....
-func (ctd ContainerDPlugin) CleanFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) CleanFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Clean a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -278,7 +278,7 @@ func (ctd ContainerDPlugin) CleanFDU(instanceid string) error {
 }
 
 // StartFDU ....
-func (ctd ContainerDPlugin) StartFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) StartFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Start a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -307,7 +307,7 @@ func (ctd ContainerDPlugin) StartFDU(instanceid string) error {
 }
 
 // StopFDU ....
-func (ctd ContainerDPlugin) StopFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Stop a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -331,7 +331,7 @@ func (ctd ContainerDPlugin) StopFDU(instanceid string) error {
 }
 
 // PauseFDU ....
-func (ctd ContainerDPlugin) PauseFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) PauseFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Pause a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -341,7 +341,7 @@ func (ctd ContainerDPlugin) PauseFDU(instanceid string) error {
 }
 
 // ResumeFDU ....
-func (ctd ContainerDPlugin) ResumeFDU(instanceid string) error {
+func (ctd *ContainerDPlugin) ResumeFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Resume a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
