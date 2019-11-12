@@ -77,6 +77,7 @@ func NewContainerDPlugin(name string, version int, plid string, manifest fog05.P
 }
 
 func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, error) {
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Looking for container: ", name)
 	containers, err := ctd.ContClient.Containers(ctd.containerdCtx)
 
 	var container *containerd.Container = nil
@@ -192,7 +193,7 @@ func (ctd *ContainerDPlugin) UndefineFDU(instanceid string) error {
 
 // ConfigureFDU ....
 func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
-	ctd.FOSRuntimePluginAbstract.Logger.Debug("Configure a container")
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Configure container: ", instanceid)
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
 		return err
@@ -201,11 +202,13 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 	// we should create the interfaces and attach them to this namespace
 
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container namespace: ", instanceid)
 	cmd := fmt.Sprintf("sudo ip netns add %s", instanceid)
+	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 	for i, vFace := range *(record.Interfaces) {
 		faceName := vFace.VirtualInterfaceName
-		ctd.FOSRuntimePluginAbstract.Logger.Info("Creating virtual interface %s", faceName)
+		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", faceName)
 		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
 			if vFace.PhysicalFace != nil {
 				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
@@ -217,6 +220,26 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					cmd = fmt.Sprintf("sudo ip link add ctd%s%d-i type veth peer name ctd%s%d-e", instanceid, i, instanceid, i)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i netns %s", instanceid, i, instanceid)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set ctd%s%d-i up", instanceid, instanceid, i)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i up", instanceid, i)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+
+				case "wireless":
+					cmd = fmt.Sprintf("sudo ip link set %s netns %s", *vFace.PhysicalFace, instanceid)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					ctd.FOSPlugin.OS.SetInterfaceUnaviable(*vFace.PhysicalFace)
+				default:
+					cmd = fmt.Sprintf("sudo ip link add ctd%s%d-i type veth peer name ctd%s%d-e", instanceid, i, instanceid, i)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i netns %s", instanceid, i, instanceid)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-e master %s", instanceid, i, *vFace.PhysicalFace)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set ctd%s%d-i up", instanceid, instanceid, i)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i up", instanceid, i)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 				}
@@ -251,8 +274,10 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 	spec = containerd.WithSpec(&s, opts...)
 	cOpts = append(cOpts, spec)
 
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
 	_, err = ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cOpts...)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
 		return err
 	}
 
@@ -293,16 +318,22 @@ func (ctd *ContainerDPlugin) StartFDU(instanceid string) error {
 
 	container, err := ctd.findContainer(cont.UUID)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
 		return err
 	}
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting container: ", (*container).ID())
 
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating task")
 	task, err := (*container).NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create task: ", err)
 		return err
 	}
 
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting task")
 	err = task.Start(ctd.containerdCtx)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot start task: ", err)
 		return err
 	}
 
