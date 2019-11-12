@@ -353,14 +353,27 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 
 	container, err := ctd.findContainer(cont.UUID)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
 		return err
 	}
 
 	task, err := (*container).Task(ctd.containerdCtx, nil)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find task ", err)
 		return err
 	}
-	task.Delete(ctd.containerdCtx)
+	err = task.Kill(ctd.containerdCtx, syscall.SIGTERM)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot send SIGTERM to task ", err)
+		return err
+	}
+
+	es, err := task.Delete(ctd.containerdCtx)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete task ", err)
+		return err
+	}
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Task exist status ", *es)
 
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.STOP)
 }
