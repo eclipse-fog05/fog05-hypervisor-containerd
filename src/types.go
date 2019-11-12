@@ -196,9 +196,36 @@ func (ctd ContainerDPlugin) ConfigureFDU(instanceid string) error {
 	cont := ctd.state.Containers[instanceid]
 
 	// we should create the interfaces and attach them to this namespace
+
+	cmd := fmt.Sprintf("sudo ip netns add %s", instanceid)
+
+	for i, vFace := range *(record.Interfaces) {
+		faceName := vFace.VirtualInterfaceName
+		ctd.FOSRuntimePluginAbstract.Logger.Info("Creating virtual interface %s", faceName)
+		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
+			if vFace.PhysicalFace != nil {
+				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
+				case "ethernet":
+					// mac := vFace.MACAddress
+					// if mac == nil {
+					// 	mac := "00:00:00:00:00:00"
+					// }
+					cmd = fmt.Sprintf("sudo ip link add ctd%s%d-i type veth peer name ctd%s%d-e", instanceid, i, instanceid, i)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i netns %s", instanceid, i, instanceid)
+					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+
+				}
+			} else {
+				ctd.FOSRuntimePluginAbstract.Logger.Error("Physical Face is none")
+			}
+		}
+
+	}
+
 	ns := specs.LinuxNamespace{
 		Type: specs.NetworkNamespace,
-		Path: cont.Namespace}
+		Path: path.Join("var", "run", "netns", cont.Namespace)}
 
 	img, err := ctd.ContClient.GetImage(ctd.containerdCtx, cont.Image)
 	if err != nil {

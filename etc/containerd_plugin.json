@@ -1,5 +1,5 @@
 {
-    "name": "containerd",
+    "name": "docker",
     "version": 1,
     "uuid": "b5947df7-ff6e-4b72-827b-a6f5b2be6b70",
     "type": "runtime",
