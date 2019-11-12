@@ -252,7 +252,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 	ns := specs.LinuxNamespace{
 		Type: specs.NetworkNamespace,
-		Path: path.Join("var", "run", "netns", cont.Namespace)}
+		Path: path.Join("/var/run/netns", cont.Namespace)}
 
 	img, err := ctd.ContClient.GetImage(ctd.containerdCtx, cont.Image)
 	if err != nil {
@@ -306,8 +306,8 @@ func (ctd *ContainerDPlugin) CleanFDU(instanceid string) error {
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.DEFINE)
 }
 
-// StartFDU ....
-func (ctd *ContainerDPlugin) StartFDU(instanceid string) error {
+// RunFDU ....
+func (ctd *ContainerDPlugin) RunFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Start a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
