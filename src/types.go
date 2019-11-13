@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path"
 	"syscall"
+	"time"
 
 	"github.com/containerd/containerd/cio"
 
@@ -377,6 +378,7 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 	}
 
 	for true {
+		ctd.FOSRuntimePluginAbstract.Logger.Info("Task status is ", taskStatus)
 		if taskStatus.Status == containerd.Stopped {
 			break
 		} else {
@@ -386,6 +388,7 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 				return err
 			}
 		}
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	es, err := task.Delete(ctd.containerdCtx)
