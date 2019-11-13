@@ -343,6 +343,9 @@ func (ctd *ContainerDPlugin) RunFDU(instanceid string) error {
 
 // StopFDU ....
 func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
+
+	var taskStatus containerd.Status
+
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Stop a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -366,6 +369,23 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot send SIGTERM to task ", err)
 		return err
+	}
+	taskStatus, err = task.Status(ctd.containerdCtx)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot get task status ", err)
+		return err
+	}
+
+	for true {
+		if taskStatus.Status == containerd.Stopped {
+			break
+		} else {
+			taskStatus, err = task.Status(ctd.containerdCtx)
+			if err != nil {
+				ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot get task status ", err)
+				return err
+			}
+		}
 	}
 
 	es, err := task.Delete(ctd.containerdCtx)
