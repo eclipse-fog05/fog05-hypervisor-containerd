@@ -398,7 +398,7 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 	}
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Task exist status ", *es)
 
-	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.STOP)
+	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.CONFIGURE)
 }
 
 // PauseFDU ....
