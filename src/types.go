@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"syscall"
 	"time"
 
@@ -99,6 +100,15 @@ func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, 
 		return nil, &fog05sdk.FError{("Container " + name + "not found"), nil}
 	}
 	return container, nil
+
+}
+
+func (ctd *ContainerDPlugin) getShortFDUID(FDUID string) string {
+	s := strings.Split(FDUID, "-")
+
+	shortID := fmt.Sprintf("%s%s%s%s%s", s[0][0], s[1][0], s[2][0], s[3][0], s[4][0])
+
+	return shortID
 
 }
 
@@ -222,7 +232,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 	for i, vFace := range *(record.Interfaces) {
 		faceName := vFace.VirtualInterfaceName
-		intfID := fmt.Sprintf("ctd-%s-%d", instanceid, i)
+		intfID := fmt.Sprintf("ctd-%s-%d", ctd.getShortFDUID(instanceid), i)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", faceName)
 		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
 			if vFace.PhysicalFace != nil {
@@ -349,7 +359,7 @@ func (ctd *ContainerDPlugin) CleanFDU(instanceid string) error {
 
 	for i, vFace := range *(record.Interfaces) {
 		faceName := vFace.VirtualInterfaceName
-		intfID := fmt.Sprintf("ctd-%s-%d", instanceid, i)
+		intfID := fmt.Sprintf("ctd-%s-%d", ctd.getShortFDUID(instanceid), i)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Removing interface: ", faceName)
 		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
 			if vFace.PhysicalFace != nil {
