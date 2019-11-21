@@ -106,7 +106,7 @@ func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, 
 func (ctd *ContainerDPlugin) getShortFDUID(FDUID string) string {
 	s := strings.Split(FDUID, "-")
 
-	shortID := fmt.Sprintf("%s%s%s%s%s", s[0][0], s[1][0], s[2][0], s[3][0], s[4][0])
+	shortID := fmt.Sprintf("%s%s%s%s%s", string(s[0][0]), string(s[1][0]), string(s[2][0]), string(s[3][0]), string(s[4][0]))
 
 	return shortID
 
