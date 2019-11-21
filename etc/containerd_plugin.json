@@ -8,6 +8,7 @@
     "configuration": {
           "ylocator": "tcp/192.168.86.224:7447",
           "nodeid": "4a560914-1c3e-4966-9fa8-7f0acc903253",
-          "update_interval": 5
+          "update_interval": 5,
+          "containerd_socket":"/run/containerd/containerd.sock"
     }
 }

@@ -26,6 +26,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const containerdSocket = "/run/containerd/containerd.sock"
+
 // ContainerDFDU ...
 type ContainerDFDU struct {
 	UUID          string   `json:"uuid"`
@@ -118,7 +120,16 @@ func (ctd *ContainerDPlugin) StartRuntime() error {
 	ctd.FOSRuntimePluginAbstract.Logger.SetReportCaller(true)
 	ctd.FOSRuntimePluginAbstract.Logger.SetLevel(log.TraceLevel)
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Connecting to containerd ... ")
-	cclient, err := containerd.New("/run/containerd/containerd.sock")
+
+	var sock string
+	sockFile, ok := (*ctd.manifest.Configuration)["containerd_socket"]
+	if ok {
+		sock = sockFile.(string)
+	} else {
+		sock = containerdSocket
+	}
+
+	cclient, err := containerd.New(sock)
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot connect to containerd!!!")
 		ctd.FOSRuntimePluginAbstract.Logger.Error(err)
