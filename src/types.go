@@ -228,6 +228,8 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container namespace: ", instanceid)
 	cmd := fmt.Sprintf("sudo ip netns add %s", instanceid)
 	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+	cmd = fmt.Sprintf("sudo ip netns exec %s ip link set lo up", instanceid)
+	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 	for _, cp := range record.ConnectionPoints {
 		err = ctd.FOSRuntimePluginAbstract.NM.AddNodePort(cp)
@@ -263,6 +265,8 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, intfID)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, intfID)
+					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
 
 				case "wireless":
 					cmd = fmt.Sprintf("sudo ip link set %s netns %s", *vFace.PhysicalFace, instanceid)
@@ -286,6 +290,8 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
+					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
 					cmd = fmt.Sprintf("sudo ip link set %s up", eFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
@@ -308,6 +314,8 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 			ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 			cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
 			ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+			cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
+			go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
 
 		}
 
