@@ -252,17 +252,25 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
 				case "ethernet":
-					// mac := vFace.MACAddress
+					mac := vFace.MACAddress
 					// if mac == nil {
 					// 	mac := "00:00:00:00:00:00"
 					// }
 
 					// cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i up", instanceid, i)
 					// ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					// $ sudo ip link set dev enp0s3 address XX:XX:XX:XX:XX:XX
 					cmd = fmt.Sprintf("sudo ip link add %s link %s type macvlan mode bridge", intfID, *vFace.PhysicalFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip link set %s netns %s", intfID, instanceid)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+
+					//setting mac address
+					if mac != nil {
+						cmd = fmt.Sprint("sudo ip netns exec %s ip link set dev %s address %s", instanceid, intfID, *mac)
+						ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
+					}
+
 					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, intfID)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, intfID)
