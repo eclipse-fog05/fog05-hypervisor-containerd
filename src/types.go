@@ -277,7 +277,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, intfID)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, intfID)
-					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
+					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 				case "wireless":
 					cmd = fmt.Sprintf("sudo ip link set %s netns %s", *vFace.PhysicalFace, instanceid)
@@ -309,7 +309,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					}
 
 					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
-					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
+					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip link set %s up", eFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
