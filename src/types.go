@@ -304,7 +304,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 					if mac != nil {
 						ctd.FOSRuntimePluginAbstract.Logger.Debug("Assiging MAC address to virtual interface: ", mac)
-						cmd = fmt.Sprintf("sudo ip netns exec %s ip link set dev %s address %s", instanceid, intfID, *mac)
+						cmd = fmt.Sprintf("sudo ip netns exec %s ip link set dev %s address %s", instanceid, iFace, *mac)
 						ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					}
 
