@@ -247,12 +247,14 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 		faceName := vFace.VirtualInterfaceName
 		intfID := fmt.Sprintf("ctd-%s-%d", ctd.getShortFDUID(instanceid), i)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", faceName)
+		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", vFace)
+		mac := vFace.MACAddress
 		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
 			if vFace.PhysicalFace != nil {
 
 				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
 				case "ethernet":
-					mac := vFace.MACAddress
+
 					// if mac == nil {
 					// 	mac := "00:00:00:00:00:00"
 					// }
@@ -299,6 +301,13 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+
+					if mac != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Debug("Assiging MAC address to virtual interface: ", mac)
+						cmd = fmt.Sprint("sudo ip netns exec %s ip link set dev %s address %s", instanceid, intfID, *mac)
+						ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					}
+
 					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
 					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
 					cmd = fmt.Sprintf("sudo ip link set %s up", eFace)
