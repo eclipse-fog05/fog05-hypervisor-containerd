@@ -172,6 +172,8 @@ func (ctd *ContainerDPlugin) StartRuntime() error {
 
 // StopRuntime ....
 func (ctd *ContainerDPlugin) StopRuntime() error {
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Removing running containers...")
+	ctd.clearRuntime()
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Bye from containerd Plugin")
 	ctd.ContClient.Close()
 	ctd.FOSRuntimePluginAbstract.FOSPlugin.RemovePluginState()
@@ -565,4 +567,31 @@ func (ctd *ContainerDPlugin) ResumeFDU(instanceid string) error {
 		return err
 	}
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.RUN)
+}
+
+func (ctd *ContainerDPlugin) clearRuntime() {
+	for _, instances := range ctd.state.CurrentInstances {
+		for _, instance := range instances {
+			ctd.forceFDUTermination(instance)
+		}
+	}
+}
+
+func (ctd *ContainerDPlugin) forceFDUTermination(instance fog05.FDURecord) {
+	switch instance.Status {
+	case fog05.PAUSE:
+		ctd.ResumeFDU(instance.UUID)
+		ctd.StopFDU(instance.UUID)
+		ctd.CleanFDU(instance.UUID)
+		ctd.UndefineFDU(instance.UUID)
+	case fog05.RUN:
+		ctd.StopFDU(instance.UUID)
+		ctd.CleanFDU(instance.UUID)
+		ctd.UndefineFDU(instance.UUID)
+	case fog05.CONFIGURE:
+		ctd.CleanFDU(instance.UUID)
+		ctd.UndefineFDU(instance.UUID)
+	case fog05.DEFINE:
+		ctd.UndefineFDU(instance.UUID)
+	}
 }
