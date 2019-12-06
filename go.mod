@@ -3,7 +3,6 @@ module github.com/eclipse-fog05/plugin-fdu-containerd
 go 1.13
 
 require (
-	github.com/atolab/yaks-go v0.0.0-20191120093444-e1dcd69908f7 // indirect
 	github.com/containerd/containerd v1.3.1
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/containerd/fifo v0.0.0-20190816180239-bda0ff6ed73c // indirect
@@ -11,11 +10,10 @@ require (
 	github.com/containerd/typeurl v0.0.0-20190911142611-5eb25027c9fd // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/eclipse-fog05/sdk-go v0.0.0-20191107090021-e097ecb33c51
+	github.com/eclipse-fog05/sdk-go v0.0.0-20191206152803-de05657c2389
 	github.com/fatih/structs v1.1.0
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/uuid v1.1.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect

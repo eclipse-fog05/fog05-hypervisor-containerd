@@ -1,9 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/atolab/yaks-go v0.0.0-20191120093444-e1dcd69908f7 h1:WTX5rhh7F77BoOcu3iR4qMF6u/G+Ohg8pnqWA5QgWjs=
-github.com/atolab/yaks-go v0.0.0-20191120093444-e1dcd69908f7/go.mod h1:EXyBtqy7IkWgR/9Y+9BwTD50XvK/8UlK9j2pdfxi8oY=
-github.com/atolab/zenoh-go v0.0.0-20191107171653-0c93f6d9fcb5 h1:4PNUgMrP32/6bZI6O9WmyPXBWg9m4n/6uEcWFy3Cv5k=
-github.com/atolab/zenoh-go v0.0.0-20191107171653-0c93f6d9fcb5/go.mod h1:3Ek15mksXcvo9kZiuRnJT1T5v9eXUvLYB8RLa4nctKM=
+github.com/atolab/yaks-go v0.0.0-20191008155503-1071d06ddd9f/go.mod h1:GgSRgQMuB01qgXwkpfk4UuP3OLtw16SZe+nUnxaAAac=
+github.com/atolab/zenoh-go v0.0.0-20191010092656-8af0c89d764d/go.mod h1:T5dO+TPK8KadbFO9aNx9Ok4X45S10wz+BesN6UgM//s=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/containerd/containerd v1.3.1 h1:LdbWxLhkAIxGO7h3mATHkyav06WuDs/yTWxIljJOTks=
@@ -26,6 +24,8 @@ github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c h1:+pKlWGMw7gf6bQ
 github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c/go.mod h1:Uw6UezgYA44ePAFQYUehOuCzmy5zmg/+nl2ZfMWGkpA=
 github.com/eclipse-fog05/sdk-go v0.0.0-20191107090021-e097ecb33c51 h1:7FosIfqT2pNI3kvaoaWe9Wztbd/jBzciPRi8Q3JrbYs=
 github.com/eclipse-fog05/sdk-go v0.0.0-20191107090021-e097ecb33c51/go.mod h1:V69LrrtIfdqvLDpgeRRDx9tqWq4GCc2/lil5avXYDQE=
+github.com/eclipse-fog05/sdk-go v0.0.0-20191206152803-de05657c2389 h1:cxZqmwnnwiZ8cT6/nGN/TKpwoiW1WBwAHkrQ10P3a6o=
+github.com/eclipse-fog05/sdk-go v0.0.0-20191206152803-de05657c2389/go.mod h1:e+cu6sBVMNOWYtoaEPu5hhNWSOruKFnp0PU8adJXhz8=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
@@ -49,6 +49,7 @@ github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvW
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
+github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
