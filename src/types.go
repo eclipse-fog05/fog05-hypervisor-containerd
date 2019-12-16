@@ -329,10 +329,11 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 						ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					}
 
-					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
-					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 					cmd = fmt.Sprintf("sudo ip link set %s up", eFace)
 					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+
+					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
+					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 				}
 			} else {
