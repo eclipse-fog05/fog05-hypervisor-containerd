@@ -2,9 +2,11 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/atolab/yaks-go v0.0.0-20191008155503-1071d06ddd9f h1:78UaNcIse73Zm/TCR84nHBIpJrbAsRAR1VEYm0l8adw=
 github.com/atolab/yaks-go v0.0.0-20191008155503-1071d06ddd9f/go.mod h1:GgSRgQMuB01qgXwkpfk4UuP3OLtw16SZe+nUnxaAAac=
+github.com/atolab/yaks-go v0.3.0 h1:UWC6C5W5cNf81wHwf0hyX4mW5kVnx4dvg/r8oYOSUMc=
 github.com/atolab/yaks-go v0.3.0/go.mod h1:lW0xMn0OMeVoMFp/SwsuIgZjhQO/YY8UFcJMGic3dvs=
 github.com/atolab/zenoh-go v0.0.0-20191010092656-8af0c89d764d h1:dla8nS0YMK7dw2NtKs6YjB5i+oUoWZhM5vrjxV5mGDI=
 github.com/atolab/zenoh-go v0.0.0-20191010092656-8af0c89d764d/go.mod h1:T5dO+TPK8KadbFO9aNx9Ok4X45S10wz+BesN6UgM//s=
+github.com/atolab/zenoh-go v0.3.0 h1:ZaMfrLAJeFSMvkZuWNaxgC3nhzzO8gUeiUEJC+Zq9io=
 github.com/atolab/zenoh-go v0.3.0/go.mod h1:3Ek15mksXcvo9kZiuRnJT1T5v9eXUvLYB8RLa4nctKM=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
@@ -110,6 +112,7 @@ golang.org/x/sys v0.0.0-20190522044717-8097e1b27ff5/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd h1:3x5uuvBgE6oaXJjCOvpCC1IpgJogqQ+PqGGU3ZxAgII=
 golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 h1:ZBzSG/7F4eNKz2L3GE9o300RX0Az1Bw5HF7PDraD+qU=
 golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
