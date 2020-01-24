@@ -206,12 +206,20 @@ func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 
 	} else {
 
-		ctd.FOSRuntimePluginAbstract.Logger.Debug("Pulling image: ", record.Image.URI)
-		img, err := ctd.ContClient.Pull(ctd.containerdCtx, record.Image.URI, containerd.WithPullUnpack)
+		var img containerd.Image
+
+		img, err := ctd.ContClient.GetImage(ctd.containerdCtx, record.Image.URI)
 		if err != nil {
-			ctd.FOSRuntimePluginAbstract.WriteFDUError(record.FDUID, record.UUID, 500, err.Error())
-			return err
+			ctd.FOSRuntimePluginAbstract.Logger.Debug("Image not present pulling image: ", record.Image.URI)
+			img, err = ctd.ContClient.Pull(ctd.containerdCtx, record.Image.URI, containerd.WithPullUnpack)
+			if err != nil {
+				ctd.FOSRuntimePluginAbstract.WriteFDUError(record.FDUID, record.UUID, 500, err.Error())
+				return err
+			}
+		} else {
+			ctd.FOSRuntimePluginAbstract.Logger.Debug("Image Already present: ", record.Image.URI)
 		}
+
 		ctd.state.Images = append(ctd.state.Images, img.Name())
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name())
 
