@@ -12,7 +12,7 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/eclipse-fog05/sdk-go v0.0.0-20200130144718-c44c74a25330 // indirect
+	github.com/eclipse-fog05/sdk-go v0.0.0-20200130144718-c44c74a25330
 	github.com/fatih/structs v1.1.0
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
