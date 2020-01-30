@@ -42,6 +42,8 @@ github.com/eclipse-fog05/sdk-go v0.0.0-20191216091715-c63fb15237cb h1:XFRnAalRyV
 github.com/eclipse-fog05/sdk-go v0.0.0-20191216091715-c63fb15237cb/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
 github.com/eclipse-fog05/sdk-go v0.0.0-20200120083011-c0eb331671a8 h1:0y2AwzOuFrhY+USRBjXS705O37DYoQHFMge/u/G9/Cs=
 github.com/eclipse-fog05/sdk-go v0.0.0-20200120083011-c0eb331671a8/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
+github.com/eclipse-fog05/sdk-go v0.0.0-20200130144718-c44c74a25330 h1:VyNYMbsBScJv3zdty7JRGnJ05NX0hOv1/9rejrZMx9g=
+github.com/eclipse-fog05/sdk-go v0.0.0-20200130144718-c44c74a25330/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
