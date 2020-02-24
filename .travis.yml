@@ -1,0 +1,16 @@
+# use the latest ubuntu environment (18.04) available on travis
+dist: xenial
+sudo: required
+language: go
+os:
+- linux
+
+go:
+  - 1.13.x
+
+before_install:
+  - sudo apt-get install -y libev4
+  - git clone https://github.com/atolab/zenoh-c && cd zenoh-c && git checkout 0.3.0 && make && sudo make install && cd ..
+
+install:
+  - make
