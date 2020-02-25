@@ -9,7 +9,7 @@ before_install:
   # install deps
   - docker exec build apt install build-essential devscripts lintian dh-make git wget jq unzip cmake sudo -y
   - docker exec build bash -c "cd /root/ && git clone https://github.com/atolab/zenoh-c -b 0.3.0 --depth 1 && cd zenoh-c && make && make install"
-  - docker exec build bash -c "cd /root/ && wget https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz && tar -C /usr/local go1.13.8.linux-amd64.tar.gz"
+  - docker exec build bash -c "cd /root/ && wget https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz && tar -C /usr/local -xzf  go1.13.8.linux-amd64.tar.gz"
   # copying repo inside container
   - docker cp ../plugin-fdu-containerd build:/root/
 script:
