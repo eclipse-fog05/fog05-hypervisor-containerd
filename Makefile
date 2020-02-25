@@ -17,7 +17,7 @@ clean:
 
 install:
 ifeq "$(wildcard $(CTD_PLUGIN_DIR))" ""
-	sudo mkdir $(CTD_PLUGIN_DIR)
+	sudo mkdir -p $(CTD_PLUGIN_DIR)
 	install -m 0755 plugin $(CTD_PLUGIN_DIR)/containerd_plugin
 	sudo cp -r etc/containerd_plugin.json $(CTD_PLUGIN_DIR)/containerd_plugin.json
 else
