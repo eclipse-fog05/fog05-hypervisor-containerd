@@ -4,7 +4,7 @@ UUID = $(shell ./to_uuid.sh)
 ETC_FOS_DIR = /etc/fos/
 VAR_FOS_DIR = /var/fos/
 FOS_CONF_FILE = /etc/fos/agent.json
-CTD_PLUGIN_DIR = /etc/fos/plugins/containerd
+CTD_PLUGIN_DIR = /etc/fos/plugins/plugin-fdu-containerd
 CTD_PLUGIN_CONF = $(CTD_PLUGIN_DIR)/containerd_plugin.json
 SYSTEMD_DIR = /lib/systemd/system/
 
