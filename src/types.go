@@ -278,7 +278,11 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 		res, _ := ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
 		for res == nil {
 			res, _ = ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
-			cont.ConnectionPoints = append(cont.ConnectionPoints, *res)
+			if res != nil {
+				cont.ConnectionPoints = append(cont.ConnectionPoints, *res)
+				break
+			}
+
 		}
 
 	}
