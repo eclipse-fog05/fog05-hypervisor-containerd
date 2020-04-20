@@ -257,6 +257,12 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	if err != nil {
 		return err
 	}
+	record.ConnectionPoints = []fog05.ConnectionPointRecord{}
+	desc, err := ctd.FOSRuntimePluginAbstract.GetFDUDescriptor(record.FDUID, instanceid)
+	if err != nil {
+		return err
+	}
+
 	cont := ctd.state.Containers[instanceid]
 
 	// we should create the interfaces and attach them to this namespace
@@ -270,20 +276,19 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 
 	cont.Namespace = nsName
 
-	for _, cp := range record.ConnectionPoints {
-		err = ctd.FOSRuntimePluginAbstract.NM.AddNodePort(cp)
+	for _, cp := range desc.ConnectionPoints {
+
+		cpRecord, err := ctd.FOSRuntimePluginAbstract.NM.CreateConnectionPoint(cp)
 		if err != nil {
 			ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of connection point")
 		}
-		res, _ := ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
-		for res == nil {
-			res, _ = ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
-			if res != nil {
-				cont.ConnectionPoints = append(cont.ConnectionPoints, *res)
-				break
-			}
+		vld := cpRecord.VLDRef
 
+		if vld != nil {
+			ctd.FOSRuntimePluginAbstract.NM.ConnectCPToVNetwork(cpRecord.UUID, *vld)
 		}
+		record.ConnectionPoints = append(record.ConnectionPoints, *cpRecord)
+		cont.ConnectionPoints = append(cont.ConnectionPoints, *cpRecord)
 
 	}
 
