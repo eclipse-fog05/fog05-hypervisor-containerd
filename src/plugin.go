@@ -29,7 +29,7 @@ func main() {
 
 	fmt.Printf("YLocator is %s\n", conf["ylocator"].(string))
 
-	cdp, err := NewContainerDPlugin(pld.Name, pld.Version, pld.UUID, pld)
+	cdp, err := NewContainerdPlugin(pld.Name, pld.Version, pld.UUID, pld)
 	check(err)
 	cdp.FOSRuntimePluginAbstract.Start()
 
