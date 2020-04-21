@@ -28,18 +28,25 @@ import (
 
 const containerdSocket = "/run/containerd/containerd.sock"
 
-// ContainerDFDU ...
-type ContainerDFDU struct {
-	UUID          string   `json:"uuid"`
-	Image         string   `json:"image"`
-	Namespace     string   `json:"ns"`
-	LogFile       string   `json:"log_file"`
-	ImageSnapshot string   `json:"snapshot"`
-	Interfaces    []string `json:"interfaces"`
+// ContainerdFDUIntrefaceInfo ...
+type ContainerdFDUIntrefaceInfo struct {
+	Internal *fog05.InterfaceInfo `json:"internal,omitempty"`
+	External *fog05.InterfaceInfo `json:"external,omitempty"`
 }
 
-// ContainerDPluginState ...
-type ContainerDPluginState struct {
+// ContainerdFDU ...
+type ContainerdFDU struct {
+	UUID             string                        `json:"uuid"`
+	Image            string                        `json:"image"`
+	Namespace        string                        `json:"ns"`
+	LogFile          string                        `json:"log_file"`
+	ImageSnapshot    string                        `json:"snapshot"`
+	Interfaces       []ContainerdFDUIntrefaceInfo  `json:"interfaces"`
+	ConnectionPoints []fog05.ConnectionPointRecord `json:"connection_points"`
+}
+
+// ContainerdPluginState ...
+type ContainerdPluginState struct {
 	BaseDir             string                       `json:"base_dir"`
 	ImageDir            string                       `json:"image_dir"`
 	LogDir              string                       `json:"log_dir"`
@@ -48,32 +55,32 @@ type ContainerDPluginState struct {
 	ContainerdNamespace string                       `json:"containerd_namespace"`
 	CurrentInstances    map[string][]fog05.FDURecord `json:"instances"`
 	Images              []string                     `json:"images"`
-	Containers          map[string]ContainerDFDU     `json:"container"`
+	Containers          map[string]ContainerdFDU     `json:"container"`
 }
 
-// ContainerDPlugin ...
-type ContainerDPlugin struct {
+// ContainerdPlugin ...
+type ContainerdPlugin struct {
 	fog05.FOSRuntimePluginAbstract
 
 	ContClient    *containerd.Client
 	sigs          chan os.Signal
 	done          chan bool
-	state         ContainerDPluginState
+	state         ContainerdPluginState
 	containerdCtx context.Context
 	manifest      *fog05.Plugin
 }
 
-// NewContainerDPlugin ...
-func NewContainerDPlugin(name string, version int, plid string, manifest fog05.Plugin) (*ContainerDPlugin, error) {
+// NewContainerdPlugin ...
+func NewContainerdPlugin(name string, version int, plid string, manifest fog05.Plugin) (*ContainerdPlugin, error) {
 
 	rtp, err := fog05.NewFOSRuntimePluginAbstract(name, version, plid, manifest)
 	if err != nil {
 		return nil, err
 	}
 
-	st := ContainerDPluginState{CurrentInstances: map[string][]fog05.FDURecord{}, Containers: map[string]ContainerDFDU{}, Images: []string{}}
+	st := ContainerdPluginState{CurrentInstances: map[string][]fog05.FDURecord{}, Containers: map[string]ContainerdFDU{}, Images: []string{}}
 
-	ctd := ContainerDPlugin{ContClient: nil, sigs: make(chan os.Signal, 1), done: make(chan bool, 1), manifest: &manifest, state: st}
+	ctd := ContainerdPlugin{ContClient: nil, sigs: make(chan os.Signal, 1), done: make(chan bool, 1), manifest: &manifest, state: st}
 
 	ctd.FOSRuntimePluginAbstract = *rtp
 	ctd.FOSRuntimePluginAbstract.FOSRuntimePluginInterface = &ctd
@@ -81,7 +88,7 @@ func NewContainerDPlugin(name string, version int, plid string, manifest fog05.P
 	return &ctd, nil
 }
 
-func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, error) {
+func (ctd *ContainerdPlugin) findContainer(name string) (*containerd.Container, error) {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Looking for container: ", name)
 	containers, err := ctd.ContClient.Containers(ctd.containerdCtx)
 
@@ -105,7 +112,7 @@ func (ctd *ContainerDPlugin) findContainer(name string) (*containerd.Container, 
 
 }
 
-func (ctd *ContainerDPlugin) getShortFDUID(FDUID string) string {
+func (ctd *ContainerdPlugin) getShortFDUID(FDUID string) string {
 	s := strings.Split(FDUID, "-")
 
 	shortID := fmt.Sprintf("%s%s%s%s%s", string(s[0][0]), string(s[1][0]), string(s[2][0]), string(s[3][0]), string(s[4][0]))
@@ -115,7 +122,7 @@ func (ctd *ContainerDPlugin) getShortFDUID(FDUID string) string {
 }
 
 // StartRuntime ...
-func (ctd *ContainerDPlugin) StartRuntime() error {
+func (ctd *ContainerdPlugin) StartRuntime() error {
 
 	ctd.FOSRuntimePluginAbstract.Logger.SetReportCaller(true)
 	ctd.FOSRuntimePluginAbstract.Logger.SetLevel(log.TraceLevel)
@@ -171,7 +178,7 @@ func (ctd *ContainerDPlugin) StartRuntime() error {
 }
 
 // StopRuntime ....
-func (ctd *ContainerDPlugin) StopRuntime() error {
+func (ctd *ContainerdPlugin) StopRuntime() error {
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Removing running containers...")
 	ctd.clearRuntime()
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Bye from containerd Plugin")
@@ -183,7 +190,7 @@ func (ctd *ContainerDPlugin) StopRuntime() error {
 }
 
 // DefineFDU ....
-func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
+func (ctd *ContainerdPlugin) DefineFDU(record fog05.FDURecord) error {
 	lstr := fmt.Sprintf("This is define for %s - %s", record.FDUID, record.UUID)
 	ctd.FOSRuntimePluginAbstract.Logger.Info(lstr)
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Defining a container")
@@ -201,7 +208,7 @@ func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 		ctd.state.Images = append(ctd.state.Images, img.Name)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name)
 
-		cont := ContainerDFDU{record.UUID, img.Name, record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name + "-" + record.UUID, []string{}}
+		cont := ContainerdFDU{record.UUID, img.Name, record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}}
 		ctd.state.Containers[record.UUID] = cont
 
 	} else {
@@ -223,7 +230,7 @@ func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 		ctd.state.Images = append(ctd.state.Images, img.Name())
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name())
 
-		cont := ContainerDFDU{record.UUID, img.Name(), record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name() + "-" + record.UUID, []string{}}
+		cont := ContainerdFDU{record.UUID, img.Name(), record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name() + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}}
 		ctd.state.Containers[record.UUID] = cont
 	}
 
@@ -233,7 +240,7 @@ func (ctd *ContainerDPlugin) DefineFDU(record fog05.FDURecord) error {
 }
 
 // UndefineFDU ....
-func (ctd *ContainerDPlugin) UndefineFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) UndefineFDU(instanceid string) error {
 	lstr := fmt.Sprintf("This is remove for %s", instanceid)
 	ctd.FOSRuntimePluginAbstract.Logger.Info(lstr)
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Undefining a container")
@@ -244,104 +251,139 @@ func (ctd *ContainerDPlugin) UndefineFDU(instanceid string) error {
 }
 
 // ConfigureFDU ....
-func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Configure container: ", instanceid)
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
 		return err
 	}
+	record.ConnectionPoints = []fog05.ConnectionPointRecord{}
+	desc, err := ctd.FOSRuntimePluginAbstract.GetFDUDescriptor(record.FDUID, instanceid)
+	if err != nil {
+		return err
+	}
+
 	cont := ctd.state.Containers[instanceid]
 
 	// we should create the interfaces and attach them to this namespace
 
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container namespace: ", instanceid)
-	cmd := fmt.Sprintf("sudo ip netns add %s", instanceid)
-	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-	cmd = fmt.Sprintf("sudo ip netns exec %s ip link set lo up", instanceid)
-	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+	nsName, err := ctd.FOSRuntimePluginAbstract.NM.CreateNetworkNamespace()
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of network namespace")
+		return err
+	}
 
-	for _, cp := range record.ConnectionPoints {
-		err = ctd.FOSRuntimePluginAbstract.NM.AddNodePort(cp)
+	cont.Namespace = nsName
+
+	for _, cp := range desc.ConnectionPoints {
+
+		cpRecord, err := ctd.FOSRuntimePluginAbstract.NM.CreateConnectionPoint(cp)
 		if err != nil {
 			ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of connection point")
 		}
-		res, _ := ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
-		for res == nil {
-			res, _ = ctd.FOSRuntimePluginAbstract.NM.GetNodePort(cp.UUID)
+		vld := cpRecord.VLDRef
+
+		if vld != nil {
+			ctd.FOSRuntimePluginAbstract.NM.ConnectCPToVNetwork(cpRecord.UUID, *vld)
 		}
+		record.ConnectionPoints = append(record.ConnectionPoints, *cpRecord)
+		cont.ConnectionPoints = append(cont.ConnectionPoints, *cpRecord)
 
 	}
 
-	for i, vFace := range *(record.Interfaces) {
+	for _, vFace := range *(record.Interfaces) {
 		faceName := vFace.VirtualInterfaceName
-		intfID := fmt.Sprintf("ctd-%s-%d", ctd.getShortFDUID(instanceid), i)
+
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", faceName)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating virtual interface: ", vFace)
 		mac := vFace.MACAddress
 		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
 			if vFace.PhysicalFace != nil {
 
-				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
+				switch faceType, _ := ctd.FOSRuntimePluginAbstract.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
 				case "ethernet":
 
-					// if mac == nil {
-					// 	mac := "00:00:00:00:00:00"
-					// }
+					macvlanTempName, err := ctd.FOSRuntimePluginAbstract.NM.CreateMACVLANInterface(*vFace.PhysicalFace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of network interface %s %s", faceName, err)
+						continue
+					}
 
-					// cmd = fmt.Sprintf("sudo ip link set ctd%s%d-i up", instanceid, i)
-					// ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					// $ sudo ip link set dev enp0s3 address XX:XX:XX:XX:XX:XX
-					cmd = fmt.Sprintf("sudo ip link add %s link %s type macvlan mode bridge", intfID, *vFace.PhysicalFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo ip link set %s netns %s", intfID, instanceid)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					_, err = ctd.FOSRuntimePluginAbstract.NM.MoveInterfaceInNamespace(macvlanTempName, cont.Namespace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error in moving interface %s to namespace %s: %s", macvlanTempName, cont.Namespace, err)
+						continue
+					}
 
 					//setting mac address
 					if mac != nil {
 						ctd.FOSRuntimePluginAbstract.Logger.Debug("Assiging MAC address to virtual interface: ", mac)
-						cmd = fmt.Sprintf("sudo ip netns exec %s ip link set dev %s address %s", instanceid, intfID, *mac)
-						ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+						_, err = ctd.FOSRuntimePluginAbstract.NM.AssignMACAddressToInterfaceInNamespace(macvlanTempName, cont.Namespace, *mac)
+						if err != nil {
+							ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assign mac address: ", err)
+							continue
+						}
 					}
 
-					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, intfID)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, intfID)
-					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					_, err = ctd.FOSRuntimePluginAbstract.NM.RenameVirtualInterfaceInNamespace(macvlanTempName, faceName, cont.Namespace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on rename interface: ", err)
+						continue
+					}
+
+					intfInfo, err := ctd.FOSRuntimePluginAbstract.NM.AssignAddressToInterfaceInNamespace(faceName, cont.Namespace, "")
+
+					intFDUInfo := ContainerdFDUIntrefaceInfo{Internal: &intfInfo.Internal, External: nil}
+
+					cont.Interfaces = append(cont.Interfaces, intFDUInfo)
 
 				case "wireless":
-					cmd = fmt.Sprintf("sudo ip link set %s netns %s", *vFace.PhysicalFace, instanceid)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					ctd.FOSPlugin.OS.SetInterfaceUnaviable(*vFace.PhysicalFace)
+
+					intfInfo, err := ctd.FOSRuntimePluginAbstract.NM.MoveInterfaceInNamespace(*vFace.PhysicalFace, cont.Namespace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on moving interface to namespace: ", err)
+						continue
+					}
+					_, err = ctd.FOSRuntimePluginAbstract.NM.RenameVirtualInterfaceInNamespace(*vFace.PhysicalFace, faceName, cont.Namespace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on rename interface: ", err)
+						continue
+					}
+					intFDUInfo := ContainerdFDUIntrefaceInfo{Internal: intfInfo, External: nil}
+					cont.Interfaces = append(cont.Interfaces, intFDUInfo)
+
 				default:
 
-					res, err := ctd.FOSRuntimePluginAbstract.NM.CreateVirtualInterface(intfID, vFace)
+					intfInfo, err := ctd.FOSPlugin.NM.CreateVirtualInterfaceInNamespace(faceName, cont.Namespace)
 					if err != nil {
-						ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creating virtual interface")
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on interface creation: ", err)
+						continue
 					}
-
-					iFace := (*res)["int_name"]
-					eFace := (*res)["ext_name"]
-
-					cmd = fmt.Sprintf("sudo ip link set %s netns %s", iFace, instanceid)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo ip link set %s master %s", eFace, *vFace.PhysicalFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
 					if mac != nil {
 						ctd.FOSRuntimePluginAbstract.Logger.Debug("Assiging MAC address to virtual interface: ", mac)
-						cmd = fmt.Sprintf("sudo ip netns exec %s ip link set dev %s address %s", instanceid, iFace, *mac)
-						ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+						_, err = ctd.FOSRuntimePluginAbstract.NM.AssignMACAddressToInterfaceInNamespace(faceName, cont.Namespace, *mac)
+						if err != nil {
+							ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assign mac address: ", err)
+							continue
+						}
 					}
 
-					cmd = fmt.Sprintf("sudo ip link set %s up", eFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					_, err = ctd.FOSRuntimePluginAbstract.NM.AttachInterfaceToBridge(intfInfo.External.Name, *vFace.PhysicalFace)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on attaching to bridge: ", err)
+						continue
+					}
 
-					cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
-					go ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
+					intfInfo, err = ctd.FOSRuntimePluginAbstract.NM.AssignAddressToInterfaceInNamespace(faceName, cont.Namespace, "")
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assigning address: ", err)
+						continue
+					}
+
+					intFDUInfo := ContainerdFDUIntrefaceInfo{Internal: &intfInfo.Internal, External: &intfInfo.External}
+					cont.Interfaces = append(cont.Interfaces, intFDUInfo)
 
 				}
 			} else {
@@ -350,24 +392,46 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 
 		} else {
 
-			res, err := ctd.FOSRuntimePluginAbstract.NM.CreateVirtualInterface(intfID, vFace)
+			intfInfo, err := ctd.FOSRuntimePluginAbstract.NM.CreateVirtualInterfaceInNamespace(faceName, cont.Namespace)
 			if err != nil {
-				ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creating virtual interface")
+				ctd.FOSRuntimePluginAbstract.Logger.Error("Error on interface creation: ", err)
+				continue
 			}
 
-			iFace := (*res)["int_name"]
-			// eFace := (*res)["ext_name"]
+			if mac != nil {
+				ctd.FOSRuntimePluginAbstract.Logger.Debug("Assiging MAC address to virtual interface: ", mac)
+				_, err = ctd.FOSRuntimePluginAbstract.NM.AssignMACAddressToInterfaceInNamespace(faceName, cont.Namespace, *mac)
+				if err != nil {
+					ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assign mac address: ", err)
+					continue
+				}
+			}
 
-			cmd = fmt.Sprintf("sudo ip link set %s netns %s", iFace, instanceid)
-			ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-			cmd = fmt.Sprintf("sudo ip netns exec %s ip link set %s up", instanceid, iFace)
-			ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-			cmd = fmt.Sprintf("sudo ip netns exec %s dhclient %s", instanceid, iFace)
-			go ctd.FOSPlugin.OS.ExecuteCommand(cmd, false, true)
+			cpid := vFace.CPID
+			if cpid != nil {
+				cp := ctd.findConnectionPoint(cont.ConnectionPoints, *cpid)
+				if cp != nil {
+					_, err = ctd.FOSRuntimePluginAbstract.NM.AttachInterfaceToBridge(intfInfo.External.Name, *cp.BrName)
+					if err != nil {
+						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on attaching to bridge: ", err)
+						continue
+					}
 
+					go ctd.FOSRuntimePluginAbstract.NM.AssignAddressToInterfaceInNamespace(faceName, cont.Namespace, "")
+					// if err != nil {
+					// 	ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assigning address: ", err)
+					// 	continue
+					// }
+				} else {
+					ctd.FOSRuntimePluginAbstract.Logger.Error("Unable to find a ConnectionPoint for ", faceName)
+				}
+
+			} else {
+				ctd.FOSRuntimePluginAbstract.Logger.Error("Interface is not connected to anything", faceName)
+			}
+			intFDUInfo := ContainerdFDUIntrefaceInfo{Internal: &intfInfo.Internal, External: &intfInfo.External}
+			cont.Interfaces = append(cont.Interfaces, intFDUInfo)
 		}
-
-		cont.Interfaces = append(cont.Interfaces, intfID)
 
 	}
 
@@ -406,7 +470,7 @@ func (ctd *ContainerDPlugin) ConfigureFDU(instanceid string) error {
 }
 
 // CleanFDU ....
-func (ctd *ContainerDPlugin) CleanFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Clean a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -424,67 +488,37 @@ func (ctd *ContainerDPlugin) CleanFDU(instanceid string) error {
 		return err
 	}
 
-	for i, vFace := range *(record.Interfaces) {
-		faceName := vFace.VirtualInterfaceName
-		intfID := fmt.Sprintf("ctd-%s-%d", ctd.getShortFDUID(instanceid), i)
-		ctd.FOSRuntimePluginAbstract.Logger.Debug("Removing interface: ", faceName)
-		if vFace.VirtualInterface.InterfaceType == fog05sdk.PHYSICAL || vFace.VirtualInterface.InterfaceType == fog05sdk.BRIDGED {
-			if vFace.PhysicalFace != nil {
-
-				switch faceType, _ := ctd.FOSPlugin.OS.GetInterfaceType(*vFace.PhysicalFace); faceType {
-				case "ethernet":
-					// mac := vFace.MACAddress
-					// if mac == nil {
-					// 	mac := "00:00:00:00:00:00"
-					// }
-
-					cmd := fmt.Sprintf("sudo ip link set %s netns 0", intfID)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					cmd = fmt.Sprintf("sudo link del %s", intfID)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-
-				case "wireless":
-					cmd := fmt.Sprintf("sudo ip link set %s netns 0", *vFace.PhysicalFace)
-					ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
-					ctd.FOSPlugin.OS.SetInterfaceAvailable(*vFace.PhysicalFace)
-				default:
-
-					_, err := ctd.FOSRuntimePluginAbstract.NM.DeleteVirtualInterface(intfID)
-					if err != nil {
-						ctd.FOSRuntimePluginAbstract.Logger.Error("Error in deletion of virtual interface")
-					}
-
-				}
-			} else {
-				ctd.FOSRuntimePluginAbstract.Logger.Error("Physical Face is none")
-			}
-
-		} else {
-
-			_, err := ctd.FOSRuntimePluginAbstract.NM.DeleteVirtualInterface(intfID)
+	for _, vFace := range cont.Interfaces {
+		if vFace.External != nil {
+			_, err = ctd.FOSPlugin.NM.DetachInterfaceFromBridge(vFace.External.Name)
 			if err != nil {
-				ctd.FOSRuntimePluginAbstract.Logger.Error("Error in deletion of virtual interface")
+				ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot detach interface: ", err)
 			}
+		}
+		_, err := ctd.FOSPlugin.NM.DeleteVirtualInterfaceFromNamespace(vFace.Internal.Name, cont.Namespace)
+		if err != nil {
+			ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete interface: ", err)
+		}
+	}
 
+	for _, cp := range record.ConnectionPoints {
+		_, err = ctd.FOSRuntimePluginAbstract.NM.RemoveConnectionPoint(cp.UUID)
+		if err != nil {
+			ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete connection point: ", err)
 		}
 
 	}
-	cmd := fmt.Sprintf("sudo ip netns del %s", instanceid)
-	ctd.FOSPlugin.OS.ExecuteCommand(cmd, true, true)
 
-	for _, cp := range record.ConnectionPoints {
-		err = ctd.FOSRuntimePluginAbstract.NM.RemoveNodePort(cp.UUID)
-		if err != nil {
-			ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of connection point")
-		}
-
+	_, err = ctd.FOSPlugin.NM.DeleteNetworkNamespace(cont.Namespace)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot remove network namespace:", err)
 	}
 
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.DEFINE)
 }
 
 // RunFDU ....
-func (ctd *ContainerDPlugin) RunFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) RunFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Start a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -519,7 +553,7 @@ func (ctd *ContainerDPlugin) RunFDU(instanceid string) error {
 }
 
 // StopFDU ....
-func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) StopFDU(instanceid string) error {
 
 	var taskStatus containerd.Status
 
@@ -578,7 +612,7 @@ func (ctd *ContainerDPlugin) StopFDU(instanceid string) error {
 }
 
 // PauseFDU ....
-func (ctd *ContainerDPlugin) PauseFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) PauseFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Pause a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -588,7 +622,7 @@ func (ctd *ContainerDPlugin) PauseFDU(instanceid string) error {
 }
 
 // ResumeFDU ....
-func (ctd *ContainerDPlugin) ResumeFDU(instanceid string) error {
+func (ctd *ContainerdPlugin) ResumeFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Resume a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
@@ -597,7 +631,7 @@ func (ctd *ContainerDPlugin) ResumeFDU(instanceid string) error {
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.RUN)
 }
 
-func (ctd *ContainerDPlugin) clearRuntime() {
+func (ctd *ContainerdPlugin) clearRuntime() {
 	for _, instances := range ctd.state.CurrentInstances {
 		for _, instance := range instances {
 			ctd.forceFDUTermination(instance)
@@ -605,7 +639,7 @@ func (ctd *ContainerDPlugin) clearRuntime() {
 	}
 }
 
-func (ctd *ContainerDPlugin) forceFDUTermination(instance fog05.FDURecord) {
+func (ctd *ContainerdPlugin) forceFDUTermination(instance fog05.FDURecord) {
 	switch instance.Status {
 	case fog05.PAUSE:
 		ctd.ResumeFDU(instance.UUID)
@@ -622,4 +656,13 @@ func (ctd *ContainerDPlugin) forceFDUTermination(instance fog05.FDURecord) {
 	case fog05.DEFINE:
 		ctd.UndefineFDU(instance.UUID)
 	}
+}
+
+func (ctd *ContainerdPlugin) findConnectionPoint(cps []fog05.ConnectionPointRecord, id string) *fog05.ConnectionPointRecord {
+	for _, v := range cps {
+		if v.CPID == id {
+			return &v
+		}
+	}
+	return nil
 }
