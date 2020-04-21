@@ -268,7 +268,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	// we should create the interfaces and attach them to this namespace
 
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container namespace: ", instanceid)
-	nsName, err := ctd.FOSPlugin.NM.CreateNetworkNamespace()
+	nsName, err := ctd.FOSRuntimePluginAbstract.NM.CreateNetworkNamespace()
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of network namespace")
 		return err
@@ -417,11 +417,11 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 						continue
 					}
 
-					_, err = ctd.FOSRuntimePluginAbstract.NM.AssignAddressToInterfaceInNamespace(faceName, cont.Namespace, "")
-					if err != nil {
-						ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assigning address: ", err)
-						continue
-					}
+					go ctd.FOSRuntimePluginAbstract.NM.AssignAddressToInterfaceInNamespace(faceName, cont.Namespace, "")
+					// if err != nil {
+					// 	ctd.FOSRuntimePluginAbstract.Logger.Error("Error on assigning address: ", err)
+					// 	continue
+					// }
 				} else {
 					ctd.FOSRuntimePluginAbstract.Logger.Error("Unable to find a ConnectionPoint for ", faceName)
 				}
@@ -494,7 +494,6 @@ func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 			if err != nil {
 				ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot detach interface: ", err)
 			}
-
 		}
 		_, err := ctd.FOSPlugin.NM.DeleteVirtualInterfaceFromNamespace(vFace.Internal.Name, cont.Namespace)
 		if err != nil {
@@ -503,7 +502,7 @@ func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 	}
 
 	for _, cp := range record.ConnectionPoints {
-		err = ctd.FOSRuntimePluginAbstract.NM.RemoveNodePort(cp.UUID)
+		_, err = ctd.FOSRuntimePluginAbstract.NM.RemoveConnectionPoint(cp.UUID)
 		if err != nil {
 			ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete connection point: ", err)
 		}

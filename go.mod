@@ -14,7 +14,7 @@ require (
 	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/eclipse-fog05/sdk-go v0.1.1-0.20200327142529-4b2bb34775ec
+	github.com/eclipse-fog05/sdk-go v0.1.1-0.20200421073354-ecbb9321272d
 	github.com/fatih/structs v1.1.0
 	github.com/gogo/googleapis v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
