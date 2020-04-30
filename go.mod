@@ -34,3 +34,5 @@ require (
 	google.golang.org/genproto v0.0.0-20200417142217-fb6d0575620b // indirect
 	google.golang.org/grpc v1.28.1 // indirect
 )
+
+replace github.com/eclipse-fog05/sdk-go => github.com/gabrik/sdk-go v0.0.0-20200429160826-8967d42465f8

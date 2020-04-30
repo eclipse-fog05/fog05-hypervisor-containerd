@@ -1,11 +1,27 @@
+/*
+* Copyright (c) 2014,2020 ADLINK Technology Inc.
+* See the NOTICE file(s) distributed with this work for additional
+* information regarding copyright ownership.
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+* which is available at https://www.apache.org/licenses/LICENSE-2.0.
+* SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+* Contributors: Gabriele Baldoni, ADLINK Technology Inc.
+* containerd plugin
+
+ */
+
 package main
 
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -466,7 +482,15 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 		return err
 	}
 
-	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
+	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
+
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Registerting Start/Run/Log/Ls/Get evals for ", instanceid)
+	startFun := CreateInstanceFunction(ctd.StartFDU, instanceid)
+	// runFun :=
+
+	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, startFun)
+
+	return res
 }
 
 // CleanFDU ....
@@ -517,12 +541,14 @@ func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.DEFINE)
 }
 
-// RunFDU ....
-func (ctd *ContainerdPlugin) RunFDU(instanceid string) error {
+// StartFDU ....
+func (ctd *ContainerdPlugin) StartFDU(instanceid string, env *string) fog05sdk.EvalResult {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Start a container")
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
-		return err
+		ec := 500
+		em := err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
 
 	cont := ctd.state.Containers[instanceid]
@@ -530,7 +556,9 @@ func (ctd *ContainerdPlugin) RunFDU(instanceid string) error {
 	container, err := ctd.findContainer(cont.UUID)
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
-		return err
+		ec := 404
+		em := "Container not found: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting container: ", (*container).ID())
 
@@ -538,18 +566,82 @@ func (ctd *ContainerdPlugin) RunFDU(instanceid string) error {
 	task, err := (*container).NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create task: ", err)
-		return err
+		ec := 500
+		em := "Cannot create task: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
 
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting task")
 	err = task.Start(ctd.containerdCtx)
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot start task: ", err)
-		return err
+		ec := 500
+		em := "Cannot start task: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
 
-	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.RUN)
+	ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.RUN)
 
+	return fog05sdk.EvalResult{Result: &instanceid}
+
+}
+
+// RunFDU ...
+func (ctd *ContainerdPlugin) RunFDU(instanceid string, env *string) fog05sdk.EvalResult {
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Run a container")
+	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
+	if err != nil {
+		ec := 500
+		em := err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+
+	cont := ctd.state.Containers[instanceid]
+
+	container, err := ctd.findContainer(cont.UUID)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
+		ec := 404
+		em := "Container not found: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Running container: ", (*container).ID())
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating task")
+	task, err := (*container).NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create task: ", err)
+		ec := 500
+		em := "Cannot create task: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting task")
+	err = task.Start(ctd.containerdCtx)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot start task: ", err)
+		ec := 500
+		em := "Cannot start task: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+
+	ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.RUN)
+
+	exitChan, err := task.Wait(ctd.containerdCtx)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot start task: ", err)
+		ec := 500
+		em := "Cannot wait task: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+
+	exitStatus := <-exitChan
+
+	e := strconv.Itoa(int(exitStatus.ExitCode()))
+
+	ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.CONFIGURE)
+
+	return fog05sdk.EvalResult{Result: &e}
 }
 
 // StopFDU ....
@@ -665,4 +757,63 @@ func (ctd *ContainerdPlugin) findConnectionPoint(cps []fog05.ConnectionPointReco
 		}
 	}
 	return nil
+}
+
+// GetLogFDU ...
+func (ctd *ContainerdPlugin) GetLogFDU(instanceid string, unit *string) fog05.EvalResult {
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Run a container")
+
+	cont := ctd.state.Containers[instanceid]
+
+	container, err := ctd.findContainer(cont.UUID)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
+		ec := 404
+		em := "Container not found: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Running container: ", (*container).ID())
+
+	cmd := "sudo chmod a+r " + cont.LogFile
+	ctd.OS.ExecuteCommand(cmd, true, true)
+
+	content, err := ioutil.ReadFile(cont.LogFile)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Unable to read log file ", err)
+		ec := 500
+		em := "Cannot read log file: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
+
+	data := string(content)
+
+	return fog05sdk.EvalResult{Result: &data}
+
+}
+
+// LsFDU ...
+func (ctd *ContainerdPlugin) LsFDU(instanceid string, unit *string) fog05.EvalResult {
+	ctd.FOSRuntimePluginAbstract.Logger.Error("Unable list file in containerd ")
+	ec := 500
+	em := "Cannot list file in containerd"
+	return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+
+}
+
+// GetFileFDU ...
+func (ctd *ContainerdPlugin) GetFileFDU(instanceid string, unit *string) fog05.EvalResult {
+	ctd.FOSRuntimePluginAbstract.Logger.Error("Unable get file in containerd ")
+	ec := 500
+	em := "Cannot get file in containerd"
+	return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+
+}
+
+// util function
+
+// CreateInstanceFunction ...
+func CreateInstanceFunction(cb func(string, *string) fog05sdk.EvalResult, instanceid string) func(*string) fog05sdk.EvalResult {
+	return func(par *string) fog05sdk.EvalResult {
+		return cb(instanceid, par)
+	}
 }

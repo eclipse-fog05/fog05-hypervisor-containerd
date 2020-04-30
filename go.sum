@@ -103,8 +103,10 @@ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
-github.com/gabrik/sdk-go v0.0.0-20200421071244-d220ae7c93e7 h1:jFs4yVVelKAVzDP1aOUuWzlv4AusjU+saaKKORz75Co=
-github.com/gabrik/sdk-go v0.0.0-20200421071244-d220ae7c93e7/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
+github.com/gabrik/sdk-go v0.0.0-20200429145925-8b27bf056850 h1:swteMuzEE6tLZzzRtLQ9AsWN5psyLKuHIk4FHUrTtKI=
+github.com/gabrik/sdk-go v0.0.0-20200429145925-8b27bf056850/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
+github.com/gabrik/sdk-go v0.0.0-20200429160826-8967d42465f8 h1:qkoUW2DE5HQekp8c9UyLm0U4BkjTaXsX4KW9OLJiBlQ=
+github.com/gabrik/sdk-go v0.0.0-20200429160826-8967d42465f8/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
 github.com/godbus/dbus v0.0.0-20190422162347-ade71ed3457e h1:BWhy2j3IXJhjCbC68FptL43tDKIq8FladmaTs3Xs7Z8=
 github.com/godbus/dbus v0.0.0-20190422162347-ade71ed3457e/go.mod h1:bBOAhwG1umN6/6ZUMtDFBMQR8jRg9O75tm9K00oMsK4=
 github.com/godbus/dbus/v5 v5.0.3 h1:ZqHaoEF7TBzh4jzPmqVhE/5A1z9of6orkAe5uHoAeME=
