@@ -40,6 +40,8 @@ import (
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/go-errors/errors"
 )
 
 const containerdSocket = "/run/containerd/containerd.sock"
@@ -272,11 +274,13 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Configure container: ", instanceid)
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Unable to get record: ", err, err.(*errors.Error).ErrorStack())
 		return err
 	}
 	record.ConnectionPoints = []fog05.ConnectionPointRecord{}
 	desc, err := ctd.FOSRuntimePluginAbstract.GetFDUDescriptor(record.FDUID, instanceid)
 	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Unable to get descriptor: ", err)
 		return err
 	}
 
@@ -287,7 +291,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container namespace: ", instanceid)
 	nsName, err := ctd.FOSRuntimePluginAbstract.NM.CreateNetworkNamespace()
 	if err != nil {
-		ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of network namespace")
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of network namespace: ", err)
 		return err
 	}
 
@@ -297,7 +301,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 
 		cpRecord, err := ctd.FOSRuntimePluginAbstract.NM.CreateConnectionPoint(cp)
 		if err != nil {
-			ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of connection point")
+			ctd.FOSRuntimePluginAbstract.Logger.Error("Error in creation of connection point: ", err)
 		}
 		vld := cpRecord.VLDRef
 
