@@ -59,6 +59,7 @@ type ContainerdFDU struct {
 	ImageSnapshot    string                        `json:"snapshot"`
 	Interfaces       []ContainerdFDUIntrefaceInfo  `json:"interfaces"`
 	ConnectionPoints []fog05.ConnectionPointRecord `json:"connection_points"`
+	ContainerOpts    []containerd.NewContainerOpts `json:"container_options"`
 }
 
 // ContainerdPluginState ...
@@ -224,7 +225,7 @@ func (ctd *ContainerdPlugin) DefineFDU(record fog05.FDURecord) error {
 		ctd.state.Images = append(ctd.state.Images, img.Name)
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name)
 
-		cont := ContainerdFDU{record.UUID, img.Name, record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}}
+		cont := ContainerdFDU{record.UUID, img.Name, record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}, []containerd.NewContainerOpts{}}
 		ctd.state.Containers[record.UUID] = cont
 
 	} else {
@@ -246,7 +247,7 @@ func (ctd *ContainerdPlugin) DefineFDU(record fog05.FDURecord) error {
 		ctd.state.Images = append(ctd.state.Images, img.Name())
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Added image: ", img.Name())
 
-		cont := ContainerdFDU{record.UUID, img.Name(), record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name() + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}}
+		cont := ContainerdFDU{record.UUID, img.Name(), record.UUID, path.Join(ctd.state.BaseDir, ctd.state.LogDir, record.UUID+".log"), img.Name() + "-" + record.UUID, []ContainerdFDUIntrefaceInfo{}, []fog05.ConnectionPointRecord{}, []containerd.NewContainerOpts{}}
 		ctd.state.Containers[record.UUID] = cont
 	}
 
@@ -461,34 +462,45 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	}
 
 	var opts []oci.SpecOpts
-	var cOpts []containerd.NewContainerOpts
+	// var cOpts []containerd.NewContainerOpts
 	var s specs.Spec
 	var spec containerd.NewContainerOpts
 
 	//setting opts
-	cOpts = append(cOpts, containerd.WithImage(img))
-	cOpts = append(cOpts, containerd.WithNewSnapshot(cont.ImageSnapshot, img))
+	// cOpts = append(cOpts, containerd.WithImage(img))
+	// cOpts = append(cOpts, containerd.WithNewSnapshot(cont.ImageSnapshot, img))
 	opts = append(opts, oci.WithDefaultSpec(), oci.WithDefaultUnixDevices)
 	opts = append(opts, oci.WithImageConfig(img))
 	opts = append(opts, oci.WithLinuxNamespace(ns))
 
 	spec = containerd.WithSpec(&s, opts...)
-	cOpts = append(cOpts, spec)
+	// cOpts = append(cOpts, spec)
 
-	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
-	_, err = ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cOpts...)
-	if err != nil {
-		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
-		return err
-	}
+	cont.ContainerOpts = append(cont.ContainerOpts, containerd.WithImage(img))
+	cont.ContainerOpts = append(cont.ContainerOpts, containerd.WithNewSnapshot(cont.ImageSnapshot, img))
+	cont.ContainerOpts = append(cont.ContainerOpts, spec)
+
+	// ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
+	// _, err = ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cOpts...)
+	// if err != nil {
+	// 	ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
+	// 	return err
+	// }
 
 	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
 
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Registerting Start/Run/Log/Ls/Get evals for ", instanceid)
 	startFun := CreateInstanceFunction(ctd.StartFDU, instanceid)
-	// runFun :=
+	runFun := CreateInstanceFunction(ctd.RunFDU, instanceid)
+	logFun := CreateInstanceFunction(ctd.GetLogFDU, instanceid)
+	lsFun := CreateInstanceFunction(ctd.LsFDU, instanceid)
+	fileFun := CreateInstanceFunction(ctd.GetFileFDU, instanceid)
 
 	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, startFun)
+	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, runFun)
+	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, logFun)
+	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, lsFun)
+	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, fileFun)
 
 	return res
 }
@@ -501,16 +513,6 @@ func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 		return err
 	}
 	cont := ctd.state.Containers[instanceid]
-
-	container, err := ctd.findContainer(cont.UUID)
-	if err != nil {
-		return err
-	}
-
-	err = (*container).Delete(ctd.containerdCtx, containerd.WithSnapshotCleanup)
-	if err != nil {
-		return err
-	}
 
 	for _, vFace := range cont.Interfaces {
 		if vFace.External != nil {
@@ -538,12 +540,30 @@ func (ctd *ContainerdPlugin) CleanFDU(instanceid string) error {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot remove network namespace:", err)
 	}
 
-	return ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.DEFINE)
+	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.DEFINE)
+
+	ctd.Connector.Local.Actual.RemovePluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid)
+	ctd.Connector.Local.Actual.RemovePluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid)
+	ctd.Connector.Local.Actual.RemovePluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid)
+	ctd.Connector.Local.Actual.RemovePluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid)
+	ctd.Connector.Local.Actual.RemovePluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid)
+
+	return res
 }
 
 // StartFDU ....
 func (ctd *ContainerdPlugin) StartFDU(instanceid string, env *string) fog05sdk.EvalResult {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Start a container")
+
+	//creating env opts
+
+	var opts []oci.SpecOpts
+	var s specs.Spec
+	var spec containerd.NewContainerOpts
+
+	opts = append(opts, oci.WithEnv(strings.Split(*env, ",")))
+	spec = containerd.WithSpec(&s, opts...)
+
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
 		ec := 500
@@ -553,17 +573,22 @@ func (ctd *ContainerdPlugin) StartFDU(instanceid string, env *string) fog05sdk.E
 
 	cont := ctd.state.Containers[instanceid]
 
-	container, err := ctd.findContainer(cont.UUID)
+	cont.ContainerOpts = append(cont.ContainerOpts, spec)
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
+	container, err := ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cont.ContainerOpts...)
 	if err != nil {
-		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
-		ec := 404
-		em := "Container not found: " + err.Error()
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
+		ec := 500
+		em := "Cannot create container: " + err.Error()
 		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
-	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting container: ", (*container).ID())
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Starting container: ", container.ID())
 
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating task")
-	task, err := (*container).NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
+
+	task, err := container.NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create task: ", err)
 		ec := 500
@@ -589,6 +614,11 @@ func (ctd *ContainerdPlugin) StartFDU(instanceid string, env *string) fog05sdk.E
 // RunFDU ...
 func (ctd *ContainerdPlugin) RunFDU(instanceid string, env *string) fog05sdk.EvalResult {
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Run a container")
+
+	var opts []oci.SpecOpts
+	var s specs.Spec
+	var spec containerd.NewContainerOpts
+
 	record, err := ctd.FOSRuntimePluginAbstract.GetFDURecord(instanceid)
 	if err != nil {
 		ec := 500
@@ -598,17 +628,25 @@ func (ctd *ContainerdPlugin) RunFDU(instanceid string, env *string) fog05sdk.Eva
 
 	cont := ctd.state.Containers[instanceid]
 
-	container, err := ctd.findContainer(cont.UUID)
+	// setting env var
+	opts = append(opts, oci.WithEnv(strings.Split(*env, ",")))
+	spec = containerd.WithSpec(&s, opts...)
+
+	cont.ContainerOpts = append(cont.ContainerOpts, spec)
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
+	container, err := ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cont.ContainerOpts...)
 	if err != nil {
-		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot find container ", err)
-		ec := 404
-		em := "Container not found: " + err.Error()
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
+		ec := 500
+		em := "Cannot create container: " + err.Error()
 		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
 	}
-	ctd.FOSRuntimePluginAbstract.Logger.Debug("Running container: ", (*container).ID())
+
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Running container: ", container.ID())
 
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating task")
-	task, err := (*container).NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
+	task, err := container.NewTask(ctd.containerdCtx, cio.LogFile(cont.LogFile))
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create task: ", err)
 		ec := 500
@@ -640,6 +678,14 @@ func (ctd *ContainerdPlugin) RunFDU(instanceid string, env *string) fog05sdk.Eva
 	e := strconv.Itoa(int(exitStatus.ExitCode()))
 
 	ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, record.UUID, fog05.CONFIGURE)
+
+	err = container.Delete(ctd.containerdCtx, containerd.WithSnapshotCleanup)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete container: ", err)
+		ec := 500
+		em := "Cannot delete container: " + err.Error()
+		return fog05sdk.EvalResult{ErrorMessage: &em, Error: &ec}
+	}
 
 	return fog05sdk.EvalResult{Result: &e}
 }
