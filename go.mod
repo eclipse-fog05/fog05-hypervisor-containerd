@@ -14,7 +14,7 @@ require (
 	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/eclipse-fog05/sdk-go v0.1.1-0.20200421073354-ecbb9321272d
+	github.com/eclipse-fog05/sdk-go v0.1.1-0.20200506091819-bd74ddb7a662
 	github.com/fatih/structs v1.1.0
 	github.com/go-errors/errors v1.0.2
 	github.com/gogo/googleapis v1.3.2 // indirect
@@ -35,5 +35,3 @@ require (
 	google.golang.org/genproto v0.0.0-20200417142217-fb6d0575620b // indirect
 	google.golang.org/grpc v1.28.1 // indirect
 )
-
-replace github.com/eclipse-fog05/sdk-go => github.com/gabrik/sdk-go v0.0.0-20200430170736-a4ffc4d352f9
