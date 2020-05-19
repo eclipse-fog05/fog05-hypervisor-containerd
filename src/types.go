@@ -811,20 +811,20 @@ func (ctd *ContainerdPlugin) StopFDU(instanceid string) error {
 		return err
 	}
 
-	for true {
+	// Tries graceful removal, then kills the task
+	for i := 0; i < 10; i++ {
 		ctd.FOSRuntimePluginAbstract.Logger.Debug("Task status is ", taskStatus)
 		if taskStatus.Status == containerd.Stopped {
 			break
 		} else {
 			taskStatus, err = task.Status(ctd.containerdCtx)
 			if err != nil {
-				ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot get task status ", err)
 				return err
 			}
 		}
-		time.Sleep(3 * time.Second)
-		task.Kill(ctd.containerdCtx, syscall.SIGKILL)
+		time.Sleep(50 * time.Millisecond)
 	}
+	task.Kill(ctd.containerdCtx, syscall.SIGKILL)
 
 	es, err := task.Delete(ctd.containerdCtx)
 	if err != nil {
