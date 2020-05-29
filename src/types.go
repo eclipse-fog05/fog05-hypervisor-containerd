@@ -144,7 +144,7 @@ func (ctd *ContainerdPlugin) getShortFDUID(FDUID string) string {
 func (ctd *ContainerdPlugin) StartRuntime() error {
 
 	ctd.FOSRuntimePluginAbstract.Logger.SetReportCaller(true)
-	ctd.FOSRuntimePluginAbstract.Logger.SetLevel(log.TraceLevel)
+	ctd.FOSRuntimePluginAbstract.Logger.SetLevel(log.DebugLevel)
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Connecting to containerd ... ")
 
 	var sock string
