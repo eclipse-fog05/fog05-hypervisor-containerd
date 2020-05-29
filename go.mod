@@ -3,6 +3,7 @@ module github.com/eclipse-fog05/plugin-fdu-containerd
 go 1.13
 
 require (
+	github.com/atolab/zenoh-go v0.3.1
 	github.com/containerd/containerd v1.2.3
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/containerd/cri v1.11.1 // indirect
