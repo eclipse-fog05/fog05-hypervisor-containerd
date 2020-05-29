@@ -16,6 +16,8 @@ github.com/atolab/zenoh-go v0.0.0-20191010092656-8af0c89d764d h1:dla8nS0YMK7dw2N
 github.com/atolab/zenoh-go v0.0.0-20191010092656-8af0c89d764d/go.mod h1:T5dO+TPK8KadbFO9aNx9Ok4X45S10wz+BesN6UgM//s=
 github.com/atolab/zenoh-go v0.3.0 h1:ZaMfrLAJeFSMvkZuWNaxgC3nhzzO8gUeiUEJC+Zq9io=
 github.com/atolab/zenoh-go v0.3.0/go.mod h1:3Ek15mksXcvo9kZiuRnJT1T5v9eXUvLYB8RLa4nctKM=
+github.com/atolab/zenoh-go v0.3.1 h1:Ab/2i+j05cGskkM6oswFLy6I5dhSDg+xxyZMLFN8jSw=
+github.com/atolab/zenoh-go v0.3.1/go.mod h1:3Ek15mksXcvo9kZiuRnJT1T5v9eXUvLYB8RLa4nctKM=
 github.com/blang/semver v3.1.0+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cilium/ebpf v0.0.0-20200110133405-4032b1d8aae3/go.mod h1:MA5e5Lr8slmEg9bt0VpxxWqJlO4iwu3FBdHUzV7wQVg=

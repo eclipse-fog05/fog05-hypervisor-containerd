@@ -4,6 +4,8 @@ go 1.13
 
 require (
 	github.com/Microsoft/hcsshim v0.8.7 // indirect
+
+	github.com/atolab/zenoh-go v0.3.1 // indirect
 	github.com/containerd/cgroups v0.0.0-20200407151229-7fc7a507c04c // indirect
 	github.com/containerd/containerd v1.3.4
 	github.com/containerd/continuity v0.0.0-20200413184840-d3ef23f19fbb // indirect
