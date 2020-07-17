@@ -457,45 +457,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 
 	}
 
-	// ns := specs.LinuxNamespace{
-	// 	Type: specs.NetworkNamespace,
-	// 	Path: path.Join("/var/run/netns", cont.Namespace)}
-
-	// img, err := ctd.ContClient.GetImage(ctd.containerdCtx, cont.Image)
-	// if err != nil {
-	// 	ctd.FOSRuntimePluginAbstract.Logger.Error("Error in getting image: ", err)
-	// 	return err
-	// }
-
-	// var opts []oci.SpecOpts
-	// // var cOpts []containerd.NewContainerOpts
-	// var s specs.Spec
-	// var spec containerd.NewContainerOpts
-
-	// // //setting opts
-	// // // cOpts = append(cOpts, containerd.WithImage(img))
-	// // // cOpts = append(cOpts, containerd.WithNewSnapshot(cont.ImageSnapshot, img))
-	// opts = append(opts, oci.WithDefaultSpec(), oci.WithDefaultUnixDevices)
-	// opts = append(opts, oci.WithImageConfig(img))
-	// opts = append(opts, oci.WithLinuxNamespace(ns))
-
-	// spec = containerd.WithSpec(&s, opts...)
-	// // cOpts = append(cOpts, spec)
-
-	// cont.ContainerOpts = append(cont.ContainerOpts, containerd.WithImage(img))
-	// cont.ContainerOpts = append(cont.ContainerOpts, containerd.WithNewSnapshot(cont.ImageSnapshot, img))
-	// cont.ContainerOpts = append(cont.ContainerOpts, spec)
-
 	ctd.state.Containers[record.UUID] = cont
-
-	// ctd.FOSRuntimePluginAbstract.Logger.Debug("Creating container: ", cont.UUID)
-	// _, err = ctd.ContClient.NewContainer(ctd.containerdCtx, cont.UUID, cOpts...)
-	// if err != nil {
-	// 	ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot create container: ", err)
-	// 	return err
-	// }
-
-	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
 
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Registerting Start/Run/Log/Ls/Get evals for ", instanceid)
 	startFun := CreateInstanceFunction(ctd.StartFDU, instanceid)
@@ -510,6 +472,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	ctd.Connector.Local.Actual.AddPluginFDULsEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, lsFun)
 	ctd.Connector.Local.Actual.AddPluginFDUFileEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, fileFun)
 
+	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
 	return res
 }
 
