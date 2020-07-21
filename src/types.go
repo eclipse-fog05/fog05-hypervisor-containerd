@@ -789,6 +789,21 @@ func (ctd *ContainerdPlugin) StopFDU(instanceid string) error {
 	}
 	task.Kill(ctd.containerdCtx, syscall.SIGKILL)
 
+	//Verifies that the task is actually killed
+	for i := 0; i < 10; i++ {
+		ctd.FOSRuntimePluginAbstract.Logger.Debug("Killed Task status is ", taskStatus)
+		if taskStatus.Status == containerd.Stopped {
+			break
+		} else {
+			taskStatus, err = task.Status(ctd.containerdCtx)
+			if err != nil {
+				return err
+			}
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	ctd.FOSRuntimePluginAbstract.Logger.Debug("Waiting loop ended - Killed Task status is ", taskStatus)
+
 	es, err := task.Delete(ctd.containerdCtx)
 	if err != nil {
 		ctd.FOSRuntimePluginAbstract.Logger.Error("Cannot delete task ", err)
