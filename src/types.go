@@ -800,6 +800,7 @@ func (ctd *ContainerdPlugin) StopFDU(instanceid string) error {
 				return err
 			}
 		}
+		task.Kill(ctd.containerdCtx, syscall.SIGKILL)
 		time.Sleep(50 * time.Millisecond)
 	}
 	ctd.FOSRuntimePluginAbstract.Logger.Debug("Waiting loop ended - Killed Task status is ", taskStatus)
