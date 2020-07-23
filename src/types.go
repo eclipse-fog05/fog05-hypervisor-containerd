@@ -472,6 +472,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	ctd.Connector.Local.Actual.AddPluginFDULsEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, lsFun)
 	ctd.Connector.Local.Actual.AddPluginFDUFileEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, fileFun)
 
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Updating status for evals for ", instanceid)
 	res := ctd.FOSRuntimePluginAbstract.UpdateFDUStatus(record.FDUID, instanceid, fog05.CONFIGURE)
 	return res
 }
