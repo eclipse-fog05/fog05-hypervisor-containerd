@@ -100,6 +100,8 @@ github.com/eclipse-fog05/sdk-go v0.1.1-0.20200421073354-ecbb9321272d h1:rjDGlhz+
 github.com/eclipse-fog05/sdk-go v0.1.1-0.20200421073354-ecbb9321272d/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
 github.com/eclipse-fog05/sdk-go v0.1.1-0.20200506091819-bd74ddb7a662 h1:5lc5YRUc0X9iZTqjvidLeOz7DTDTT3altFENPYjH4Bg=
 github.com/eclipse-fog05/sdk-go v0.1.1-0.20200506091819-bd74ddb7a662/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
+github.com/eclipse-fog05/sdk-go v0.2.0 h1:67ZwozAuOMc6Aa3nR8CyEQF8qzE5h5AuQkqkERWBzHw=
+github.com/eclipse-fog05/sdk-go v0.2.0/go.mod h1:UPQANX/4L5xMOeniR2rkKZ5ARMRrN8P/F+ixl7xFrHQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=

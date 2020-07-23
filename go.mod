@@ -3,7 +3,6 @@ module github.com/eclipse-fog05/plugin-fdu-containerd
 go 1.13
 
 require (
-	github.com/eclipse-fog05/sdk-go/fog05sdk v0.2.0
 	github.com/Microsoft/hcsshim v0.8.7 // indirect
 
 	github.com/atolab/zenoh-go v0.3.1 // indirect
@@ -17,6 +16,7 @@ require (
 	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/eclipse-fog05/sdk-go v0.2.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-errors/errors v1.0.2
 	github.com/gogo/googleapis v1.3.2 // indirect
