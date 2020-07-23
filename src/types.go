@@ -254,6 +254,9 @@ func (ctd *ContainerdPlugin) DefineFDU(record fog05.FDURecord) error {
 	}
 
 	err := ctd.FOSRuntimePluginAbstract.AddFDURecord(record.UUID, &record)
+	if err != nil {
+		ctd.FOSRuntimePluginAbstract.Logger.Info("Error in define container: ", err)
+	}
 	ctd.FOSRuntimePluginAbstract.Logger.Info("Defined container: ", record.UUID)
 	return err
 }
