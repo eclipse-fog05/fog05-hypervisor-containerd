@@ -466,6 +466,7 @@ func (ctd *ContainerdPlugin) ConfigureFDU(instanceid string) error {
 	lsFun := CreateInstanceFunction(ctd.LsFDU, instanceid)
 	fileFun := CreateInstanceFunction(ctd.GetFileFDU, instanceid)
 
+	ctd.FOSRuntimePluginAbstract.Logger.Info("Callbacks created, registering... ")
 	ctd.Connector.Local.Actual.AddPluginFDUStartEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, startFun)
 	ctd.Connector.Local.Actual.AddPluginFDURunEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, runFun)
 	ctd.Connector.Local.Actual.AddPluginFDULogEval(ctd.Node, ctd.UUID, record.FDUID, instanceid, logFun)
